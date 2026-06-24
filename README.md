@@ -51,3 +51,49 @@ Princip je identičan kao kod IPv4, samo se umesto mreže/maske 0.0.0.0/0.0.0.0 
 Ako koristimo dinamički protokol rutiranja, default rutu možemo automatski **propagirati ka drugim ruterima**, umesto da je ručno konfigurišemo na svakom od njih:
 
 - Kod **OSPF**:
+
+"Router(config)# router ospf 1"
+
+"Router(config-router)# default-information originate"
+
+- Kod **EIGRP**, default ruta se obično propagira automatski kroz redistribuciju ili korišćenjem komande `ip default-network` (starija metoda).
+
+Ovim se ruterima koji ne imaju direktno definisanu default rutu, ona "ubacuje" preko routing protokola kao **O*E2** (kod OSPF-a) ruta u njihovoj tabeli.
+
+---
+
+### 8. Šta je razlika između Default Route i Default Gateway-a?
+- **Default Route** — koristi se na **ruteru**, konfiguriše se kao statička ruta u routing tabeli rutera, i odnosi se na rutiranje između mreža.
+- **Default Gateway** — koristi se na **krajnjem uređaju** (računar, server, štampač), predstavlja IP adresu rutera preko kojeg taj uređaj šalje sav saobraćaj namenjen mrežama van njegove lokalne mreže (konfiguriše se npr. komandom `ip default-gateway` na svičevima ili kroz IP podešavanja na računaru).
+
+Iako su konceptualno slični (oba predstavljaju "izlaz kada ne znamo drugu rutu"), razlika je u **nivou uređaja** na kome se primenjuju.
+
+---
+
+### 9. Šta je floating static route i kakva je njena veza sa default rutom?
+**Floating static route** je statička ruta (uključujući i default rutu) kojoj je ručno podignuta **administrativna distanca (AD)** iznad vrednosti koju ima primarna ruta (npr. ona naučena dinamičkim protokolom). Zbog toga se ova ruta **ne koristi normalno**, već **samo kao backup** — ako primarna ruta (npr. OSPF ruta ili primarna default ruta) ispadne iz tabele (npr. zbog pada linka), floating ruta automatski preuzima ulogu.
+
+Primer floating default rute (AD podignuta na 200, veće od default AD=1 za statičke rute):
+
+"Router(config)# ip route 0.0.0.0 0.0.0.0 200.10.10.5 200"
+
+---
+
+### 10. Koje su komande za proveru default rute na ruteru?
+Najvažnije komande za verifikaciju:
+
+"Router# show ip route"
+
+"Router# show ip route 0.0.0.0"
+
+"Router# show running-config | include ip route"
+
+- `show ip route` — u routing tabeli, default ruta je obeležena oznakom **S\*** (statička default ruta) ili **O\*E2** (default ruta naučena preko OSPF-a), a na vrhu se ispisuje i linija `Gateway of last resort`.
+- `show ip route 0.0.0.0` — prikazuje detalje konkretno o default ruti (next-hop, administrativna distanca, metrika).
+
+---
+
+### 11. Šta se dešava ako paket ne odgovara nijednoj ruti, a default ruta nije konfigurisana?
+Ukoliko ne postoji nijedna konkretna ruta **ni** default ruta za odredišnu mrežu paketa, ruter **odbacuje (drop-uje)** paket i, ukoliko je omogućeno, šalje **ICMP "Destination Unreachable"** poruku pošiljaocu paketa, jer nema informacije kuda dalje da prosledi saobraćaj.
+
+---
