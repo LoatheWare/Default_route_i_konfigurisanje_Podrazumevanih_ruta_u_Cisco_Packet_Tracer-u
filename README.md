@@ -1,0 +1,1 @@
+# Default_route_i_konfigurisanje_Podrazumevanih_ruta_u_Cisco_Packet_Tracer-u
